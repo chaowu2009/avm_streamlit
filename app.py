@@ -13,6 +13,8 @@ df = pd.read_csv("kc_house_data.csv")
 
 st.write(f"total data length = {len(df)}")
 
+df = df.drop(['id','price','date'], axis =1)
+
 st.write(df.head(5))
 
 comment = """
