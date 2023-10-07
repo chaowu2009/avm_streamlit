@@ -124,8 +124,8 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # normalize
 from sklearn.preprocessing import StandardScaler
 s_scaler = StandardScaler()
-X_train = s_scaler.fit_transform(X_train.astype(np.float))
-X_test = s_scaler.transform(X_test.astype(np.float))
+X_train = s_scaler.fit_transform(X_train.astype(float))
+X_test = s_scaler.transform(X_test.astype(float))
 
 
 st.title("ML algorithm test")
