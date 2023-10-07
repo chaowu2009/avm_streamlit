@@ -190,48 +190,56 @@ st.write(f"Train: PPE10 = {train_ppe10}")
 st.write(f"Test: PPE10 = {test_ppe10}")
 
 
-# st.subheader("deep learing model")
+st.subheader("deep learing model")
 
-# # Creating a Neural Network Model
-# from tensorflow.keras.models import Sequential
-# from tensorflow.keras.layers import Dense, Activation
-# from tensorflow.keras.optimizers import Adam
+# Creating a Neural Network Model
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation
+from tensorflow.keras.optimizers import Adam
 
-# import os
-# import tensorflow as tf
-# #os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID" #If the line below doesn't work, uncomment this line (make sure to comment the line below); it should help.
-# os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+import os
+import tensorflow as tf
+#os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID" #If the line below doesn't work, uncomment this line (make sure to comment the line below); it should help.
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-# model = Sequential()
+model = Sequential()
 
-# model.add(Dense(19,activation='relu'))
-# model.add(Dense(19,activation='relu'))
-# model.add(Dense(19,activation='relu'))
-# model.add(Dense(19,activation='relu'))
-# model.add(Dense(1))
+model.add(Dense(18,activation='relu'))
+model.add(Dense(18,activation='relu'))
+model.add(Dense(18,activation='relu'))
+model.add(Dense(18,activation='relu'))
+model.add(Dense(1))
 
-# model.compile(optimizer='adam',loss='mse')
+model.compile(optimizer='adam',loss='mse')
 
-# model.fit(x=X_train,y=y_train,
-#           validation_data=(X_test,y_test),
-#           batch_size=128,epochs=20)
+st.write(X_train.shape)
 
-
-# loss_df = pd.DataFrame(model.history.history)
-# fig = loss_df.plot(figsize=(12,8))
-# st.pyplot(fig)
+model.fit(x=X_train,y=y_train,
+          validation_data=(X_test,y_test),
+          batch_size=128,epochs=20)
 
 
-# y_pred = model.predict(X_train)
-# df_train= pd.DataFrame({'soldprice': y_train, 'predicted': y_pred})
+loss_df = pd.DataFrame(model.history.history)
+fig = plt.figure()
+plt.plot(loss_df)
+plt.grid(True)
+plt.title('loss function')
+st.pyplot(fig)
 
-# #evaluate the model (intercept and slope)
-# y_pred = model.predict(X_test)
-# df_test = pd.DataFrame({'soldprice': y_test, 'predicted': y_pred})
 
-# train_ppe10 = compute_ppe10(df_train)
-# test_ppe10 = compute_ppe10(df_test)
+y_pred = model.predict(X_train)
+st.write(y_pred)
+df_train= pd.DataFrame({'soldprice': y_train})
+df_train['predicted'] =  y_pred
 
-# st.write(f"Train: PPE10 = {train_ppe10}")
-# st.write(f"Test: PPE10 = {test_ppe10}")
+#evaluate the model (intercept and slope)
+y_pred = model.predict(X_test)
+df_test = pd.DataFrame({'soldprice': y_test})
+df_test['predicted'] = y_pred
+
+train_ppe10 = compute_ppe10(df_train)
+test_ppe10 = compute_ppe10(df_test)
+
+st.write(f"Train: PPE10 = {train_ppe10}")
+st.write(f"Test: PPE10 = {test_ppe10}")
 

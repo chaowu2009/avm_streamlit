@@ -1,5 +1,7 @@
 streamlit
 pandas
 numpy
-matplotlib
+matplotlib==3.2
 seaborn
+sklearn
+tensorflow
