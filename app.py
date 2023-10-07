@@ -144,17 +144,8 @@ X_test = s_scaler.transform(X_test.astype(float))
 st.subheader("Linear Regression")
 #Liner Regression
 from sklearn.linear_model import LinearRegression
-lr = LinearRegression()  
-lr.fit(X_train, y_train)
-
-y_pred = lr.predict(X_train)
-df_train= pd.DataFrame({'soldprice': y_train, 'predicted': y_pred})
-
-#evaluate the model (intercept and slope)
-y_pred = lr.predict(X_test)
-df_test = pd.DataFrame({'soldprice': y_test, 'predicted': y_pred})
-
-#st.write(df_test.head(10))
+lr_model = LinearRegression()  
+lr_model.fit(X_train, y_train)
 
 # compute PPE 10
 def compute_ppe10(df):
@@ -167,43 +158,96 @@ def compute_ppe10(df):
 
     return ppe10
 
-train_ppe10 = compute_ppe10(df_train)
-test_ppe10 = compute_ppe10(df_test)
+def compute_stat(model):
+    y_pred = model.predict(X_train)
+    #st.write(y_pred)
+    df_train= pd.DataFrame({'soldprice': y_train})
+    df_train['predicted'] =  y_pred
 
-train_score = round(lr.score(X_train,y_train), 2)
-test_score = round(lr.score(X_test, y_test), 2)
+    #evaluate the model (intercept and slope)
+    y_pred = model.predict(X_test)
+    df_test = pd.DataFrame({'soldprice': y_test})
+    df_test['predicted'] = y_pred
 
-st.write('Linear Regression Model:')
-st.write(f"Train Score = {train_score}, Test Score = {test_score}")
-st.write(f"Train: PPE10 = {train_ppe10}, Test: PPE10 = {test_ppe10}")
+    train_ppe10 = compute_ppe10(df_train)
+    test_ppe10 = compute_ppe10(df_test)
+    try:
+        train_score = round(model.score(X_train,y_train), 2)
+        test_score = round(model.score(X_test, y_test), 2)
+        st.write(f"Train Score = {train_score}, Test Score = {test_score}")
+    except:
+        pass
+    
+    st.write(f"Train: PPE10 = {train_ppe10}, Test: PPE10 = {test_ppe10}")
 
+compute_stat(model = lr_model)
 
-st.subheader("Random Forest")
+st.subheader("Random Forest model")
 from sklearn.ensemble import RandomForestRegressor
 
-rf = RandomForestRegressor()  
-rf.fit(X_train, y_train)
+rf_model = RandomForestRegressor()  
+rf_model.fit(X_train, y_train)
 
-y_pred = rf.predict(X_train)
-df_train= pd.DataFrame({'soldprice': y_train, 'predicted': y_pred})
+compute_stat(model = rf_model)
+
+st.subheader("Linear GAM model")
+from pygam import LinearGAM
+#gam = LinearGAM().fit(X, y)
+#gam = LinearGAM().gridsearch(X_train, y_train)
+gam_model = LinearGAM(n_splines=10).gridsearch(X_train, y_train)
+
+compute_stat(model = gam_model)
+
+
+st.subheader("xgboost model")
+import xgboost as xgb
+dtrain_reg = xgb.DMatrix(X_train, y_train, enable_categorical=True)
+dtest_reg = xgb.DMatrix(X_test, y_test, enable_categorical=True)
+# Define hyperparameters
+params = {"objective": "reg:squarederror", "tree_method": "hist"}
+
+n = 100
+xgboost_model = xgb.train(
+   params=params,
+   dtrain=dtrain_reg,
+   num_boost_round=n,
+)
+
+y_pred = xgboost_model.predict(dtrain_reg)
+df_train= pd.DataFrame({'soldprice': y_train})
+df_train['predicted'] =  y_pred
 
 #evaluate the model (intercept and slope)
-y_pred = rf.predict(X_test)
-df_test = pd.DataFrame({'soldprice': y_test, 'predicted': y_pred})
+y_pred = xgboost_model.predict(dtest_reg)
+df_test = pd.DataFrame({'soldprice': y_test})
+df_test['predicted'] = y_pred
 
 train_ppe10 = compute_ppe10(df_train)
 test_ppe10 = compute_ppe10(df_test)
 
-train_score = round(lr.score(X_train,y_train), 2)
-test_score = round(lr.score(X_test, y_test), 2)
+try:
+    train_score = round(xgboost_model.score(X_train,y_train), 2)
+    test_score = round(xgboost_model.score(X_test, y_test), 2)
+    st.write(f"Train Score = {train_score}, Test Score = {test_score}")
+except:
+    pass
 
-st.write('Random Forest Regresion Model:')
-st.write(f"Train Score = {train_score}, Test Score = {test_score}")
 st.write(f"Train: PPE10 = {train_ppe10}, Test: PPE10 = {test_ppe10}")
 
 
-st.subheader("Deep Learing Model")
+st.subheader("Catboost model")
 
+from catboost import CatBoostRegressor
+catboost_model = CatBoostRegressor(iterations=2,
+                          learning_rate=1,
+                          depth=2)
+# Fit model
+catboost_model.fit(X_train, y_train)
+# Get predictions
+
+compute_stat(model=catboost_model)
+
+st.subheader("Deep Learing Model")
 # Creating a Neural Network Model
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Activation
@@ -214,45 +258,32 @@ import tensorflow as tf
 #os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID" #If the line below doesn't work, uncomment this line (make sure to comment the line below); it should help.
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-model = Sequential()
+dl_model = Sequential()
 
 input_dimesion = 18
 
-model.add(Dense(input_dimesion, activation='relu'))
-model.add(Dense(input_dimesion, activation='relu'))
-model.add(Dense(input_dimesion, activation='relu'))
-model.add(Dense(input_dimesion, activation='relu'))
-model.add(Dense(1))
+dl_model.add(Dense(input_dimesion, activation='relu'))
+dl_model.add(Dense(input_dimesion, activation='relu'))
+dl_model.add(Dense(input_dimesion, activation='relu'))
+dl_model.add(Dense(input_dimesion, activation='relu'))
+dl_model.add(Dense(1))
 
-model.compile(optimizer='adam',loss='mse')
+dl_model.compile(optimizer='adam',loss='mse')
 
 #st.write(X_train.shape)
 
-model.fit(x=X_train,y=y_train,
+dl_model.fit(x=X_train,y=y_train,
           validation_data=(X_test,y_test),
           batch_size=128,epochs=20)
 
 
-loss_df = pd.DataFrame(model.history.history)
+loss_df = pd.DataFrame(dl_model.history.history)
 fig = plt.figure()
 plt.plot(loss_df)
 plt.grid(True)
 plt.title('loss function')
 st.pyplot(fig)
 
-y_pred = model.predict(X_train)
-#st.write(y_pred)
-df_train= pd.DataFrame({'soldprice': y_train})
-df_train['predicted'] =  y_pred
+compute_stat(model=dl_model)
 
-#evaluate the model (intercept and slope)
-y_pred = model.predict(X_test)
-df_test = pd.DataFrame({'soldprice': y_test})
-df_test['predicted'] = y_pred
-
-train_ppe10 = compute_ppe10(df_train)
-test_ppe10 = compute_ppe10(df_test)
-
-st.write(f"Train: PPE10 = {train_ppe10}")
-st.write(f"Test: PPE10 = {test_ppe10}")
 

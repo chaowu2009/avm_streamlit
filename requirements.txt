@@ -6,3 +6,5 @@ seaborn
 scikit-learn
 tensorflow
 pygam
+xgboost
+catboost
