@@ -13,7 +13,7 @@ df = pd.read_csv("kc_house_data.csv")
 
 st.write(f"total data length = {len(df)}")
 
-df = df.drop(['id','price','date'], axis =1)
+df = df.drop(['id','date'], axis =1)
 
 st.write(df.head(5))
 
@@ -111,8 +111,9 @@ st.pyplot(fig)
 
 st.subheader("ML example")
 
-X = df.drop(['id','price','date'],axis =1).values
+X = df.drop(['price'],axis =1).values
 
+# convert price to log10 scale
 df['price'] = np.log10(df['price'])
 y = df['price'].values
 
