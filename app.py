@@ -45,10 +45,10 @@ sqft_lot15 - The square footage of the land lots of the nearest 15 neighbors
 st.subheader("all columns")
 st.write(sorted(df.columns))
 
-st.subheader("describe")
+st.subheader("df.describe()")
 st.write(df.describe())
 
-st.subheader("nul values")
+st.subheader("nul values stats")
 st.write(df.isnull().sum())
 
 st.subheader('look at house price distribution')
@@ -68,13 +68,13 @@ plt.title("distribution")
 
 fig.add_subplot(2,2,3)
 plt.hist(np.log10(df['price']), bins=20)
-plt.xlabel('log(price')
+plt.xlabel('log(price)')
 plt.title("histogram ( log10(price)")
 plt.grid(True)
 
 fig.add_subplot(2,2,4)
 sns.distplot(np.log10(df['price']))
-plt.xlabel('log(price')
+plt.xlabel('log(price)')
 plt.title("distribution")
 plt.grid(True)
 plt.tight_layout()
@@ -87,20 +87,22 @@ st.write(df.corr()['price'].sort_values(ascending=False))
 
 
 # feature with higher correlation
-st.subheader("Check sqft_living")
+st.subheader("scatterplot sqft_living versus price")
 fig = plt.figure()
 fig.add_subplot(2,1,1)
-plt.scatter(df['sqft_living'], df['price'])
+plt.scatter( df['price'], df['sqft_living'])
 plt.grid(True)
 plt.grid(True)
 plt.xlabel('sqft_living')
 plt.ylabel("price")
 
 fig.add_subplot(2,1,2)
-plt.scatter(df['sqft_living'], np.log10(df['price']))
+plt.scatter(np.log10(df['price']), df['sqft_living'] )
 plt.grid(True)
 plt.xlabel('sqft_living')
 plt.ylabel("log10(price)")
+
+plt.tight_layout()
 
 st.pyplot(fig)
 
@@ -109,7 +111,18 @@ st.pyplot(fig)
 # st.pyplot(fig)
 
 
-st.subheader("ML example")
+st.title("Try different machine learing algorithms")
+
+price_threshold = st.slider("choose a price cut off (maximum) to remove outlier in millions", 
+                            min_value=2, 
+                            max_value=10, 
+                            value=5)
+price_threshold = float(price_threshold)*1.0e5
+
+st.write(f"selected threshold = {price_threshold}")
+
+f1 = df['price'] < price_threshold
+df = df[f1]
 
 X = df.drop(['price'],axis =1).values
 
@@ -128,9 +141,7 @@ X_train = s_scaler.fit_transform(X_train.astype(float))
 X_test = s_scaler.transform(X_test.astype(float))
 
 
-st.title("ML algorithm test")
-
-st.subheader("simple linear regression")
+st.subheader("Linear Regression")
 #Liner Regression
 from sklearn.linear_model import LinearRegression
 lr = LinearRegression()  
@@ -143,7 +154,7 @@ df_train= pd.DataFrame({'soldprice': y_train, 'predicted': y_pred})
 y_pred = lr.predict(X_test)
 df_test = pd.DataFrame({'soldprice': y_test, 'predicted': y_pred})
 
-st.write(df_test.head(10))
+#st.write(df_test.head(10))
 
 # compute PPE 10
 def compute_ppe10(df):
@@ -159,12 +170,12 @@ def compute_ppe10(df):
 train_ppe10 = compute_ppe10(df_train)
 test_ppe10 = compute_ppe10(df_test)
 
-st.write('Random Forest Regression Model:')
-st.write("Train Score {:.2f}".format(lr.score(X_train,y_train)))
-st.write("Test Score {:.2f}".format(lr.score(X_test, y_test)))
+train_score = round(lr.score(X_train,y_train), 2)
+test_score = round(lr.score(X_test, y_test), 2)
 
-st.write(f"Train: PPE10 = {train_ppe10}")
-st.write(f"Test: PPE10 = {test_ppe10}")
+st.write('Linear Regression Model:')
+st.write(f"Train Score = {train_score}, Test Score = {test_score}")
+st.write(f"Train: PPE10 = {train_ppe10}, Test: PPE10 = {test_ppe10}")
 
 
 st.subheader("Random Forest")
@@ -180,20 +191,18 @@ df_train= pd.DataFrame({'soldprice': y_train, 'predicted': y_pred})
 y_pred = rf.predict(X_test)
 df_test = pd.DataFrame({'soldprice': y_test, 'predicted': y_pred})
 
-st.write('Random Forest Regression Model:')
-st.write("Train Score {:.2f}".format(rf.score(X_train,y_train)))
-st.write("Test Score {:.2f}".format(rf.score(X_test, y_test)))
-
-#st.write(df_test.head(10))
-
 train_ppe10 = compute_ppe10(df_train)
 test_ppe10 = compute_ppe10(df_test)
 
-st.write(f"Train: PPE10 = {train_ppe10}")
-st.write(f"Test: PPE10 = {test_ppe10}")
+train_score = round(lr.score(X_train,y_train), 2)
+test_score = round(lr.score(X_test, y_test), 2)
+
+st.write('Random Forest Regresion Model:')
+st.write(f"Train Score = {train_score}, Test Score = {test_score}")
+st.write(f"Train: PPE10 = {train_ppe10}, Test: PPE10 = {test_ppe10}")
 
 
-st.subheader("deep learing model")
+st.subheader("Deep Learing Model")
 
 # Creating a Neural Network Model
 from tensorflow.keras.models import Sequential
@@ -207,15 +216,17 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 model = Sequential()
 
-model.add(Dense(18,activation='relu'))
-model.add(Dense(18,activation='relu'))
-model.add(Dense(18,activation='relu'))
-model.add(Dense(18,activation='relu'))
+input_dimesion = 18
+
+model.add(Dense(input_dimesion, activation='relu'))
+model.add(Dense(input_dimesion, activation='relu'))
+model.add(Dense(input_dimesion, activation='relu'))
+model.add(Dense(input_dimesion, activation='relu'))
 model.add(Dense(1))
 
 model.compile(optimizer='adam',loss='mse')
 
-st.write(X_train.shape)
+#st.write(X_train.shape)
 
 model.fit(x=X_train,y=y_train,
           validation_data=(X_test,y_test),
@@ -229,9 +240,8 @@ plt.grid(True)
 plt.title('loss function')
 st.pyplot(fig)
 
-
 y_pred = model.predict(X_train)
-st.write(y_pred)
+#st.write(y_pred)
 df_train= pd.DataFrame({'soldprice': y_train})
 df_train['predicted'] =  y_pred
 
