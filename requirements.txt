@@ -8,3 +8,4 @@ tensorflow
 pygam
 xgboost
 catboost
+streamlit-toggle-switch

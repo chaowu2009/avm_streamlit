@@ -61,7 +61,7 @@ plt.grid(True)
 plt.title("histogram")
 
 fig.add_subplot(2,2,2)
-sns.distplot(df['price'])
+sns.displot(df['price'])
 plt.xlabel('price')
 plt.grid(True)
 plt.title("distribution")
@@ -73,7 +73,7 @@ plt.title("histogram ( log10(price)")
 plt.grid(True)
 
 fig.add_subplot(2,2,4)
-sns.distplot(np.log10(df['price']))
+sns.displot(np.log10(df['price']))
 plt.xlabel('log(price)')
 plt.title("distribution")
 plt.grid(True)
@@ -113,21 +113,39 @@ st.pyplot(fig)
 
 st.title("Try different machine learing algorithms")
 
-price_threshold = st.slider("choose a price cut off (maximum) to remove outlier in millions", 
-                            min_value=2, 
-                            max_value=10, 
-                            value=5)
-price_threshold = float(price_threshold)*1.0e5
+slider_values = st.slider('Select a range of values (in millions)', 0, 10, (1, 6))
+lower_threshold= slider_values[0]
+upper_threshold = slider_values[1]
 
-st.write(f"selected threshold = {price_threshold}")
+lower_threshold = float(lower_threshold)*1e5
+upper_threshold = float(upper_threshold)*1e6
 
-f1 = df['price'] < price_threshold
-df = df[f1]
+st.write(f"selected threshold (million) = {lower_threshold/1e6}, {upper_threshold/1e6}")
+
+
+f1 = df['price'] < upper_threshold
+f2 = df['price'] > lower_threshold
+df = df[f1 & f2]
+
+st.write(f"length(df)= {len(df)}")
 
 X = df.drop(['price'],axis =1).values
 
 # convert price to log10 scale
-df['price'] = np.log10(df['price'])
+import streamlit_toggle as toggle 
+log_scale = toggle.st_toggle_switch(label="log scale", 
+                    key="Key1", 
+                    default_value=False, 
+                    label_after = False, 
+                    inactive_color = '#D3D3D3', 
+                    active_color="#11567f", 
+                    track_color="#29B5E8"
+                    )
+print(f"log_scale = {log_scale}")
+if log_scale:
+    df['price'] = np.log10(df['price'])
+
+
 y = df['price'].values
 
 #splitting Train and Test 
@@ -200,39 +218,42 @@ compute_stat(model = gam_model)
 
 
 st.subheader("xgboost model")
-import xgboost as xgb
-dtrain_reg = xgb.DMatrix(X_train, y_train, enable_categorical=True)
-dtest_reg = xgb.DMatrix(X_test, y_test, enable_categorical=True)
-# Define hyperparameters
-params = {"objective": "reg:squarederror", "tree_method": "hist"}
+def xgboost_model():
+    import xgboost as xgb
+    dtrain_reg = xgb.DMatrix(X_train, y_train, enable_categorical=True)
+    dtest_reg = xgb.DMatrix(X_test, y_test, enable_categorical=True)
+    # Define hyperparameters
+    params = {"objective": "reg:squarederror", "tree_method": "hist"}
 
-n = 100
-xgboost_model = xgb.train(
-   params=params,
-   dtrain=dtrain_reg,
-   num_boost_round=n,
-)
+    n = 100
+    xgboost_model = xgb.train(
+    params=params,
+    dtrain=dtrain_reg,
+    num_boost_round=n,
+    )
 
-y_pred = xgboost_model.predict(dtrain_reg)
-df_train= pd.DataFrame({'soldprice': y_train})
-df_train['predicted'] =  y_pred
+    y_pred = xgboost_model.predict(dtrain_reg)
+    df_train= pd.DataFrame({'soldprice': y_train})
+    df_train['predicted'] =  y_pred
 
-#evaluate the model (intercept and slope)
-y_pred = xgboost_model.predict(dtest_reg)
-df_test = pd.DataFrame({'soldprice': y_test})
-df_test['predicted'] = y_pred
+    #evaluate the model (intercept and slope)
+    y_pred = xgboost_model.predict(dtest_reg)
+    df_test = pd.DataFrame({'soldprice': y_test})
+    df_test['predicted'] = y_pred
 
-train_ppe10 = compute_ppe10(df_train)
-test_ppe10 = compute_ppe10(df_test)
+    train_ppe10 = compute_ppe10(df_train)
+    test_ppe10 = compute_ppe10(df_test)
 
-try:
-    train_score = round(xgboost_model.score(X_train,y_train), 2)
-    test_score = round(xgboost_model.score(X_test, y_test), 2)
-    st.write(f"Train Score = {train_score}, Test Score = {test_score}")
-except:
-    pass
+    try:
+        train_score = round(xgboost_model.score(X_train,y_train), 2)
+        test_score = round(xgboost_model.score(X_test, y_test), 2)
+        st.write(f"Train Score = {train_score}, Test Score = {test_score}")
+    except:
+        pass
 
-st.write(f"Train: PPE10 = {train_ppe10}, Test: PPE10 = {test_ppe10}")
+    st.write(f"Train: PPE10 = {train_ppe10}, Test: PPE10 = {test_ppe10}")
+
+xgboost_model()
 
 
 st.subheader("Catboost model")
