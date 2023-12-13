@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pylab as plt
 import seaborn as sns
-from dl_model import train_dl_model
+from base_dl_model import train_dl_model
 
 st.title("AVM example with streamlit")
 
@@ -50,65 +50,6 @@ st.write(df.describe())
 
 st.subheader("nul values stats")
 st.write(df.isnull().sum())
-
-st.subheader('look at house price distribution')
-fig = plt.figure()
-
-fig.add_subplot(2,2,1)
-plt.hist(df['price'], bins=20)
-plt.xlabel('price')
-plt.grid(True)
-plt.title("histogram")
-
-fig.add_subplot(2,2,2)
-sns.displot(df['price'])
-plt.xlabel('price')
-plt.grid(True)
-plt.title("distribution")
-
-fig.add_subplot(2,2,3)
-plt.hist(np.log10(df['price']), bins=20)
-plt.xlabel('log(price)')
-plt.title("histogram ( log10(price)")
-plt.grid(True)
-
-fig.add_subplot(2,2,4)
-sns.displot(np.log10(df['price']))
-plt.xlabel('log(price)')
-plt.title("distribution")
-plt.grid(True)
-plt.tight_layout()
-
-st.pyplot(fig) 
-
-
-st.subheader("Check correlation matrix")
-st.write(df.corr()['price'].sort_values(ascending=False))
-
-
-# feature with higher correlation
-st.subheader("scatterplot sqft_living versus price")
-fig = plt.figure()
-fig.add_subplot(2,1,1)
-plt.scatter( df['price'], df['sqft_living'])
-plt.grid(True)
-plt.grid(True)
-plt.xlabel('sqft_living')
-plt.ylabel("price")
-
-fig.add_subplot(2,1,2)
-plt.scatter(np.log10(df['price']), df['sqft_living'] )
-plt.grid(True)
-plt.xlabel('sqft_living')
-plt.ylabel("log10(price)")
-
-plt.tight_layout()
-
-st.pyplot(fig)
-
-# fig = plt.figure(figsize=(15,10))
-# sns.scatterplot(x='long',y='lat',data=df,hue='price')
-# st.pyplot(fig)
 
 
 st.title("Try different machine learing algorithms")
@@ -338,7 +279,6 @@ df_train['predicted'] =  y_pred_1
 
 train_ppe10 = compute_ppe10(df_train)
 st.write(f"new train PPE10 = {train_ppe10}")
-
 
 
 

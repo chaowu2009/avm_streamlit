@@ -37,8 +37,8 @@ def train_dl_model(X_train, X_test, y_train, y_test):
 
     dl_model.fit(x=X_train,y=y_train,
             validation_data=(X_test,y_test),
-            batch_size=128,epochs=100)
-
+            batch_size=64, 
+            epochs=20)
 
     loss_df = pd.DataFrame(dl_model.history.history)
     fig = plt.figure()
